@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Status Unit Cabang</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-4">
+  <h1 class="text-3xl font-bold mb-6">Status Unit per Cabang</h1>
+  <div id="output" class="space-y-6"></div>
+
+  <script>
+    const sheetId = '1Zr5uCduA3N5YiPblbCpPfs9Nuo_qfNQqV-snGTpsr44';
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+
+    fetch(url)
+      .then(response => response.text())
+      .then(csv => {
+        Papa.parse(csv, {
+          header: true,
+          complete: function(results) {
+            const data = results.data;
+            const grouped = {};
+
+            // Kelompokkan berdasarkan Cabang
+            data.forEach(row => {
+              const cabang = row.Cabang;
+              if (!grouped[cabang]) grouped[cabang] = [];
+              grouped[cabang].push(row);
+            });
+
+            const output = document.getElementById('output');
+            for (const cabang in grouped) {
+              const section = document.createElement('div');
+              section.innerHTML = `<h2 class="text-xl font-semibold mb-2">📍 Cabang ${cabang}</h2>`;
+              const unitContainer = document.createElement('div');
+              unitContainer.className = "flex flex-wrap gap-2";
+
+              grouped[cabang].forEach(unit => {
+                const status = unit.Status.toLowerCase().trim();
+                const color = status === "kosong" ? "bg-green-500" : "bg-red-500";
+                const text = status === "kosong" ? "🟢" : "🔴";
+                const card = document.createElement('div');
+                card.className = `px-3 py-2 rounded text-white text-sm ${color}`;
+                card.textContent = `${text} Unit ${unit.Unit}`;
+                unitContainer.appendChild(card);
+              });
+
+              section.appendChild(unitContainer);
+              output.appendChild(section);
+            }
+          }
+        });
+      });
+  </script>
+</body>
+</html>
